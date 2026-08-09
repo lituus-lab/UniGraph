@@ -10,12 +10,20 @@ int main(void) {
   printf("UniGraph %s\n", ug_version());
 
   UniGraphHandle g = ug_graph_new(1 /* directed */);
+  if (g == NULL) {
+    fprintf(stderr, "failed to allocate graph\n");
+    return 1;
+  }
   long long paris = ug_graph_add_vertex(g, 0);
   long long lyon = ug_graph_add_vertex(g, 1);
   long long marseille = ug_graph_add_vertex(g, 2);
 
-  ug_graph_add_edge(g, paris, lyon, 450.0);
-  ug_graph_add_edge(g, lyon, marseille, 310.0);
+  if (!ug_graph_add_edge(g, paris, lyon, 450.0) ||
+      !ug_graph_add_edge(g, lyon, marseille, 310.0)) {
+    fprintf(stderr, "failed to add edge\n");
+    ug_graph_free(g);
+    return 1;
+  }
 
   printf("vertices=%lld edges=%lld\n", ug_graph_vertex_count(g),
          ug_graph_edge_count(g));
