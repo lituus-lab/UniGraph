@@ -71,3 +71,4 @@ benchmarks/rust/target/
 benchmarks/cpp/bench_boost
 benchmarks/nim/bench_unigraph
 benchmarks/python/__pycache__/
+benchmarks/.venv/
