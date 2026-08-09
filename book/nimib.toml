@@ -1,0 +1,18 @@
+[nimib]
+srcDir = "."
+homeDir = "__site"
+
+[nimibook]
+title = "UniGraph - Graph Algorithms in Nim"
+description = "A pedagogical guide to graph algorithms"
+author = "UniGraph contributors"
+
+[nav]
+numbered = true
+
+[theme]
+default = "light"
+available = ["light", "dark", "rust", "coal", "navy", "ayu"]
+
+[repository]
+url = "https://github.com/lituus-lab/UniGraph"
