@@ -44,7 +44,7 @@ type
     currentStep*: int # Current step number
     discovered*: seq[VertexId] # Discovery order
     finished*: seq[VertexId] # Finish order (for DFS)
-    edgeTraversals*: seq[tuple[source: VertexId, target: VertexId]]
+    edgeTraversals*: seq[tuple[source: VertexId, target: VertexId, edgeData: E]]
     edgeClassifications*: seq[tuple[source: VertexId, target: VertexId,
         kind: EdgeKind]]
     discoveryTime*: Table[VertexId, int] # CLRS d[v]
@@ -100,7 +100,8 @@ proc classifyEdge[E](visitor: Visitor[E], source, target: VertexId): EdgeKind =
     ekTree
   elif target notin visitor.finishTime:
     ekBack
-  elif visitor.discoveryTime[target] > visitor.discoveryTime[source]:
+  elif source in visitor.discoveryTime and
+      visitor.discoveryTime[target] > visitor.discoveryTime[source]:
     ekForward
   else:
     ekCross
@@ -109,7 +110,8 @@ proc onEdge*[E](visitor: Visitor[E], source, target: VertexId, edgeData: E) =
   ## Called when traversing an edge. Classifies the edge (see `EdgeKind`)
   ## using the visitor's own discovery/finish state at the time of the call.
   visitor.currentStep += 1
-  visitor.edgeTraversals.add((source: source, target: target))
+  visitor.edgeTraversals.add((source: source, target: target,
+      edgeData: edgeData))
   if visitor.traceEnabled:
     let kind = classifyEdge(visitor, source, target)
     visitor.edgeClassifications.add((source: source, target: target, kind: kind))
@@ -140,4 +142,3 @@ proc clear*[E](visitor: Visitor[E]) =
   visitor.discoveryTime.clear()
   visitor.finishTime.clear()
   visitor.clock = 0
-
