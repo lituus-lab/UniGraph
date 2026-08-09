@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
-# Shell-free: `pwd` and `rm` are unavailable under mingw32-make on Windows.
+# Portable paths use $(CURDIR); cleanup selects del /q on Windows.
 ifeq ($(origin CC),default)
   ifeq ($(OS),Windows_NT)
     CC := gcc
