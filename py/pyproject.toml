@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 lituus-lab
+[build-system]
+requires = ["setuptools>=77", "wheel", "Cython>=3.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unigraph"
+version = "1.0.0"
+description = "A generic, pedagogical graph data structure library (Python binding over the UniGraph C library)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+authors = [{ name = "lbartoletti" }]
+keywords = ["graph", "graph-algorithms", "bfs", "dfs", "shortest-path", "minimum-spanning-tree"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: C",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/lituus-lab/UniGraph"
+Repository = "https://github.com/lituus-lab/UniGraph"
+Issues = "https://github.com/lituus-lab/UniGraph/issues"
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.setuptools]
+packages = ["unigraph"]
