@@ -1,0 +1,73 @@
+# build artifacts
+build/
+# Anchored: this is the build output dir, and unanchored `bin/` would also
+# swallow any nested bin/ a subdirectory legitimately tracks.
+/bin/
+libUniGraph.so
+libUniGraph.so.*
+libUniGraph.dylib
+libUniGraph.a
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.so.*
+*.dylib
+*.a
+*.lib
+
+# coverage
+coverage/
+lcov.info
+
+# nim cache
+nimcache/
+rnimcache/
+dnimcache/
+
+# generated API reference (nimble docs); docs/ itself is hand-written source
+pages/
+nimdoc.out.css
+
+# nimble book output
+book/__site/
+book/nbook
+
+# python binding artifacts (sources tracked; generated + bundled lib not)
+py/unigraph/_core.c
+py/unigraph/*.so
+py/unigraph/libUniGraph.so
+py/dist/
+py/build/
+py/*.egg-info/
+py/**/__pycache__/
+py/.pytest_cache/
+# vendored by setup.py (vendor_nim_source) right before `sdist` packages
+# files -- shipped inside the sdist tarball, never tracked here
+py/_nimsrc/
+
+# c test/example binaries
+tests/c/test_unigraph
+examples/c/demo
+
+# os / editor
+.DS_Store
+*~
+.*.swp
+*.dSYM
+
+*.log
+*.core
+nimble.develop
+nimble.paths
+nimbledeps
+
+# cross-library benchmarks: generated fixtures (regenerate with
+# generate_graphs.py) and per-run results are reproducible, not source
+benchmarks/data/
+benchmarks/results/*.csv
+benchmarks/rust/target/
+benchmarks/cpp/bench_boost
+benchmarks/nim/bench_unigraph
+benchmarks/python/__pycache__/
