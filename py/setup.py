@@ -90,10 +90,10 @@ def ensure_lib_built():
     return built
 
 
-# `sdist` packages source only -- it never compiles anything, so it must not
-# require a prebuilt lib. Every other command (build_ext, bdist_wheel, ...)
-# needs a real lib to link against, built locally or, from an sdist, via nimble.
-IS_SDIST = "sdist" in sys.argv
+# `sdist` alone packages source and must not require a prebuilt library. A
+# combined command such as `sdist bdist_wheel` still needs the native library.
+commands = [argument for argument in sys.argv[1:] if not argument.startswith("-")]
+IS_SDIST = commands == ["sdist"]
 
 if IS_SDIST:
     vendor_nim_source()
