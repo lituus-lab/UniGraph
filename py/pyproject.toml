@@ -9,7 +9,7 @@ name = "unigraph"
 version = "1.0.0"
 description = "A generic, pedagogical graph data structure library (Python binding over the UniGraph C library)"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [{ name = "lbartoletti" }]
 keywords = ["graph", "graph-algorithms", "bfs", "dfs", "shortest-path", "minimum-spanning-tree"]
@@ -17,7 +17,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -35,7 +34,7 @@ Repository = "https://github.com/lituus-lab/UniGraph"
 Issues = "https://github.com/lituus-lab/UniGraph/issues"
 
 [project.optional-dependencies]
-test = ["pytest>=7"]
+test = ["pytest>=9.1.1"]
 
 [tool.setuptools]
 packages = ["unigraph"]
