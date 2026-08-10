@@ -121,19 +121,21 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       - run: nimble pyLib
-      - run: cd py && python3 setup.py build_ext --inplace
-      - run: cd py && python3 -m pytest -q
-      - run: cd py && python3 setup.py bdist_wheel
+      - run: cd py && python setup.py build_ext --inplace
+      - run: cd py && python -m pytest -q
+      - run: cd py && python setup.py bdist_wheel
       - name: Repair Wheel (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           pip install auditwheel
-          auditwheel repair py/dist/*.whl -w py/dist/repaired/
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE" \
+            auditwheel repair py/dist/*.whl -w py/dist/repaired/
       - name: Repair Wheel (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           pip install delocate
-          delocate-wheel py/dist/*.whl -w py/dist/repaired/
+          DYLD_LIBRARY_PATH="$GITHUB_WORKSPACE" \
+            delocate-wheel py/dist/*.whl -w py/dist/repaired/
       - name: Repair Wheel (Windows)
         if: matrix.os == 'windows-latest'
         run: |
