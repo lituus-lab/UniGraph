@@ -4,6 +4,7 @@
 
 Report vulnerabilities via GitHub private vulnerability reporting (Security
 tab → "Report a vulnerability"), not via a public issue. Include: description
+
 + impact, minimal reproducer, affected version (`ug_version()`).
 
 Only the latest released line is supported. The C ABI is frozen as of 1.0.0
@@ -11,7 +12,7 @@ Only the latest released line is supported. The C ABI is frozen as of 1.0.0
 
 ## Surface
 
-- C ABI trusts its callers (C pointers, lengths) and never raises; out-of-range
++ C ABI trusts its callers (C pointers, lengths) and never raises; out-of-range
   input is clamped. Foreign callers validate untrusted input before calling.
-- Python binding adds the domain check and raises `ValueError`/`TypeError`.
-- Single-threaded, reentrant; no global mutable state.
++ Python binding adds the domain check and raises `ValueError`/`TypeError`.
++ Single-threaded, reentrant; no global mutable state.

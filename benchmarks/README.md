@@ -125,11 +125,13 @@ benchmarks/
 ## File formats
 
 `data/*.edges` — one generic graph:
+
 ```text
 V E DIRECTED WEIGHTED START
 u v w
 ...  (E lines)
 ```
+
 `V`/`E` are vertex/edge counts, `DIRECTED`/`WEIGHTED` are `0`/`1`. Undirected
 graphs list each edge once — every harness adds both directions itself.
 `START` is the fixed BFS/DFS/Dijkstra source vertex, **precomputed from the
@@ -142,11 +144,13 @@ not used as the fixed start: on a sparse random graph it can be
 near-isolated by pure chance, making the traversal trivial.
 
 `data/tsp/*.tsp` — one TSP instance:
+
 ```text
 N
 x y
 ...  (N lines)
 ```
+
 2D coordinates; distance is Euclidean; the graph is implicitly complete (no
 edge list — materializing one isn't necessary for a coordinate-based
 heuristic, and would make the largest instances impractical for the
@@ -194,6 +198,7 @@ python3 correctness_check.py     # also runs automatically at the end of run_all
 ```
 
 Per-toolchain dependencies (`run_all.sh` installs the Python ones itself):
+
 - Nim: nothing beyond what `nimble install -y` already gets you.
 - Python: `pip install --break-system-packages networkx python-igraph`.
 - C++: a Boost installation with Boost.Graph headers (`brew install boost`

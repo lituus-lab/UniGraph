@@ -5,7 +5,8 @@
 ## Key Features
 
 - 🚀 **Multiple kernel backends**: List/Seq (sparse), Matrix (dense), CSR (static analysis)
-- 🎯 **Zero-cost abstractions**: compile-time generics, no dynamic dispatch or boxing between an algorithm and the kernel it runs on
+- 🎯 **Zero-cost abstractions**: compile-time generics, no dynamic dispatch or
+  boxing between an algorithm and the kernel it runs on
 - 🔒 **Stable vertex indices**: Petgraph pattern for safe vertex references
 - ♻️ **Immutability by default**: functional purity, backed by Nim's ARC/ORC memory management
 - 📖 **Pedagogical tracing**: Visitor pattern for step-by-step algorithm visualization
@@ -14,7 +15,9 @@
 
 This library is built on five principles:
 
-1. **Generic, not virtual**: algorithms are written once against the `GraphKernel` concept and monomorphized at compile time for each kernel — no runtime dispatch
+1. **Generic, not virtual**: algorithms are written once against the
+   `GraphKernel` concept and monomorphized at compile time for each kernel —
+   no runtime dispatch
 2. **Pedagogical Clarity**: Every algorithm can show its work step-by-step
 3. **Functional Purity**: Immutability by default, mutations when needed
 4. **Type Safety**: Compile-time checks where possible, explicit errors and contracts at runtime
@@ -37,6 +40,7 @@ assuming advanced notation.
 ## How to Use This Book
 
 Each chapter contains:
+
 - **Theoretical foundations**: Mathematical background and complexity analysis
 - **Executable code examples**: Real Nim code you can run and modify
 - **Visual diagrams**: Illustrations of data structures and algorithms
@@ -91,7 +95,7 @@ let (g2, v) = g.addVertex("A")  # Returns (newGraph, id); g unchanged
 
 ## Getting Help
 
-- **Source code**: https://github.com/lituus-lab/UniGraph
+- **Source code**: <https://github.com/lituus-lab/UniGraph>
 - **API documentation**: Generated from source comments
 - **Issues and bugs**: Report on GitHub
 
