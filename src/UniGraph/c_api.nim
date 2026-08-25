@@ -93,9 +93,51 @@ proc copyString(value: string; output: ptr char; capacity: csize_t): clonglong =
   clonglong(value.len)
 
 # Unmangled C symbols, C calling convention, exported from the shared lib.
+
+# A shared library runs NimMain from DllMain (Windows) or an ELF constructor;
+# a static one has neither, so nothing initializes the Nim runtime. The first
+# entry point then enters Nim code whose globals were never set up and the
+# process faults. The static-library tasks pass -d:staticNoAutoInit; shared
+# builds must not, or NimMain runs twice.
+when defined(staticNoAutoInit):
+  # A once primitive, not a plain flag: two threads reaching an entry point
+  # together would both see the flag unset, both call NimMain, and the second
+  # would enter Nim code the first had not finished initializing. The platform
+  # primitives block the losers until the winner returns, which a flag cannot.
+  #
+  # C statics, not Nim globals: module initialization would reset a Nim one and
+  # NimMain would run again. NimMain is declared here too — the generated
+  # prototype comes after this section.
+  {.emit: """/*VARSECTION*/
+void NimMain(void);
+#ifdef _WIN32
+#  include <windows.h>
+static INIT_ONCE ug_runtime_once = INIT_ONCE_STATIC_INIT;
+static BOOL CALLBACK ug_runtime_init(PINIT_ONCE o, PVOID p, PVOID *c) {
+  (void)o; (void)p; (void)c; NimMain(); return TRUE;
+}
+static void ug_runtime_ensure(void) {
+  InitOnceExecuteOnce(&ug_runtime_once, ug_runtime_init, NULL, NULL);
+}
+#else
+#  include <pthread.h>
+static pthread_once_t ug_runtime_once = PTHREAD_ONCE_INIT;
+static void ug_runtime_init(void) { NimMain(); }
+static void ug_runtime_ensure(void) {
+  pthread_once(&ug_runtime_once, ug_runtime_init);
+}
+#endif
+""".}
+  template ensureRuntime() =
+    {.emit: "  ug_runtime_ensure();".}
+else:
+  template ensureRuntime() = discard
+
+
 {.push exportc, cdecl, dynlib.}
 
 proc ug_init(): cint =
+  ensureRuntime()
   if not gInited:
     NimMain()
     gInited = true
@@ -103,12 +145,14 @@ proc ug_init(): cint =
 
 proc ug_version(): cstring =
   ## Static version string; do not free.
+  ensureRuntime()
   UniGraphVersionC
 
 proc ug_graph_new(directed: cint): pointer =
   ## Create a new graph. directed != 0 -> Directed, else Undirected.
   ## The foreign instantiation is always Simple: no self-loops or parallel
   ## edges.
+  ensureRuntime()
   try:
     let dir = if directed != 0: Directed else: Undirected
     let g = newMutableGraph[int64, float64](direction = dir)
@@ -120,12 +164,14 @@ proc ug_graph_new(directed: cint): pointer =
 proc ug_graph_free(handle: pointer) =
   ## Release a graph created by ug_graph_new. Never call twice on the same
   ## handle, and never use the handle again afterwards.
+  ensureRuntime()
   if handle.isNil:
     return
   var g = cast[UniGraphHandle](handle)
   GC_unref(g)
 
 proc ug_graph_vertex_count(handle: pointer): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -134,6 +180,7 @@ proc ug_graph_vertex_count(handle: pointer): clonglong =
     -1
 
 proc ug_graph_edge_count(handle: pointer): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -144,6 +191,7 @@ proc ug_graph_edge_count(handle: pointer): clonglong =
 proc ug_graph_add_vertex(handle: pointer; data: clonglong): clonglong =
   ## Add a vertex carrying `data` as its label. Returns the new vertex's id
   ## (stable for the lifetime of this handle — no removal is exposed).
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -159,6 +207,7 @@ proc ug_graph_get_vertex_data(
   ## outData untouched) if the vertex doesn't exist. Returns int (not Nim bool)
   ## to match the C ABI in include/UniGraph.h — a one-byte bool return would
   ## leave three bytes of the int return register undefined for C callers.
+  ensureRuntime()
   if handle.isNil or outData.isNil: return 0
   try:
     let g = cast[UniGraphHandle](handle)
@@ -175,6 +224,7 @@ proc ug_graph_add_edge(
 ): cint =
   ## Add an edge. Returns 0 for a self-loop, a duplicate edge, or a
   ## non-existent endpoint — never raises. Returns int to match the C ABI.
+  ensureRuntime()
   if handle.isNil: return 0
   try:
     let g = cast[UniGraphHandle](handle)
@@ -186,6 +236,7 @@ proc ug_graph_add_edge(
     0
 
 proc ug_graph_has_edge(handle: pointer; source, target: clonglong): cint =
+  ensureRuntime()
   if handle.isNil: return 0
   try:
     let g = cast[UniGraphHandle](handle)
@@ -201,6 +252,7 @@ proc ug_graph_get_edge_weight(
 ): cint =
   ## Write the edge's weight into outWeight and return 1, or return 0 (leaving
   ## outWeight untouched) if the edge doesn't exist. Returns int per the C ABI.
+  ensureRuntime()
   if handle.isNil or outWeight.isNil: return 0
   try:
     let g = cast[UniGraphHandle](handle)
@@ -215,6 +267,7 @@ proc ug_graph_get_edge_weight(
     0
 
 proc ug_graph_remove_edge(handle: pointer; source, target: clonglong): cint =
+  ensureRuntime()
   if handle.isNil: return 0
   try:
     let g = cast[UniGraphHandle](handle)
@@ -227,6 +280,7 @@ proc ug_graph_remove_edge(handle: pointer; source, target: clonglong): cint =
 
 proc ug_graph_vertices(handle: pointer; output: ptr clonglong;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -238,6 +292,7 @@ proc ug_graph_vertices(handle: pointer; output: ptr clonglong;
 
 proc ug_graph_edges(handle: pointer; output: ptr UgEdge;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -249,6 +304,7 @@ proc ug_graph_edges(handle: pointer; output: ptr UgEdge;
 
 proc ug_graph_neighbors(handle: pointer; vertex: clonglong; output: ptr UgEdge;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -262,6 +318,7 @@ proc ug_graph_neighbors(handle: pointer; vertex: clonglong; output: ptr UgEdge;
 
 proc ug_graph_in_neighbors(handle: pointer; vertex: clonglong;
     output: ptr UgEdge; capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -275,6 +332,7 @@ proc ug_graph_in_neighbors(handle: pointer; vertex: clonglong;
 
 proc ug_graph_out_neighbors(handle: pointer; vertex: clonglong;
     output: ptr UgEdge; capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -288,6 +346,7 @@ proc ug_graph_out_neighbors(handle: pointer; vertex: clonglong;
 
 proc ug_graph_bfs(handle: pointer; start: clonglong; output: ptr clonglong;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -300,6 +359,7 @@ proc ug_graph_bfs(handle: pointer; start: clonglong; output: ptr clonglong;
 
 proc ug_graph_dfs(handle: pointer; start: clonglong; output: ptr clonglong;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -311,6 +371,7 @@ proc ug_graph_dfs(handle: pointer; start: clonglong; output: ptr clonglong;
     -1
 
 proc ug_graph_is_connected(handle: pointer): cint =
+  ensureRuntime()
   if handle.isNil: return 0
   try:
     let g = cast[UniGraphHandle](handle)
@@ -324,6 +385,7 @@ proc ug_graph_is_connected(handle: pointer): cint =
 
 proc ug_graph_reachable(handle: pointer; start: clonglong;
     output: ptr clonglong; capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -336,6 +398,7 @@ proc ug_graph_reachable(handle: pointer; start: clonglong;
 proc ug_graph_dijkstra(handle: pointer; start: clonglong;
     outVertices: ptr clonglong; outDistances: ptr cdouble;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -357,6 +420,7 @@ proc ug_graph_dijkstra(handle: pointer; start: clonglong;
 
 proc ug_graph_shortest_path(handle: pointer; start, goal: clonglong;
     output: ptr clonglong; capacity: csize_t; outCost: ptr cdouble): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -373,6 +437,7 @@ proc ug_graph_shortest_path(handle: pointer; start, goal: clonglong;
 proc ug_graph_a_star(handle: pointer; start, goal: clonglong;
     output: ptr clonglong; capacity: csize_t): clonglong =
   ## Zero-heuristic A* exposes the algorithm without an unsafe foreign callback.
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -387,6 +452,7 @@ proc ug_graph_a_star(handle: pointer; start, goal: clonglong;
 proc ug_graph_bellman_ford(handle: pointer; start: clonglong;
     outVertices: ptr clonglong; outDistances: ptr cdouble; capacity: csize_t;
     outNegativeCycle: ptr cint): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -411,6 +477,7 @@ proc ug_graph_bellman_ford(handle: pointer; start: clonglong;
 
 proc ug_graph_prim(handle: pointer; output: ptr UgEdge;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -421,6 +488,7 @@ proc ug_graph_prim(handle: pointer; output: ptr UgEdge;
 
 proc ug_graph_kruskal(handle: pointer; output: ptr UgEdge;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -431,6 +499,7 @@ proc ug_graph_kruskal(handle: pointer; output: ptr UgEdge;
 
 proc ug_graph_scc(handle: pointer; output: ptr UgComponentEntry;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -448,6 +517,7 @@ proc ug_graph_scc(handle: pointer; output: ptr UgComponentEntry;
 
 proc ug_graph_kosaraju(handle: pointer; output: ptr UgComponentEntry;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -465,6 +535,7 @@ proc ug_graph_kosaraju(handle: pointer; output: ptr UgComponentEntry;
 
 proc ug_graph_articulation_points(handle: pointer; output: ptr clonglong;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -475,6 +546,7 @@ proc ug_graph_articulation_points(handle: pointer; output: ptr clonglong;
 
 proc ug_graph_tsp_naive(handle: pointer; output: ptr clonglong;
     capacity: csize_t; outCost: ptr cdouble): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -487,6 +559,7 @@ proc ug_graph_tsp_naive(handle: pointer; output: ptr clonglong;
 proc ug_graph_tsp_2opt(handle: pointer; maxIterations: clonglong;
     output: ptr clonglong; capacity: csize_t;
     outCost: ptr cdouble): clonglong =
+  ensureRuntime()
   if handle.isNil or maxIterations < 0: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -500,6 +573,7 @@ proc ug_graph_tsp_2opt(handle: pointer; maxIterations: clonglong;
 proc ug_graph_tsp_nearest(handle: pointer; start: clonglong;
     output: ptr clonglong; capacity: csize_t;
     outCost: ptr cdouble): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -516,6 +590,7 @@ proc ug_graph_tsp_nearest(handle: pointer; start: clonglong;
 
 proc ug_graph_to_ascii(handle: pointer; output: ptr char;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -525,6 +600,7 @@ proc ug_graph_to_ascii(handle: pointer; output: ptr char;
 
 proc ug_graph_to_dot(handle: pointer; output: ptr char;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)
@@ -535,6 +611,7 @@ proc ug_graph_to_dot(handle: pointer; output: ptr char;
 
 proc ug_graph_degree_distribution(handle: pointer; output: ptr UgDegreeCount;
     capacity: csize_t): clonglong =
+  ensureRuntime()
   if handle.isNil: return -1
   try:
     let g = cast[UniGraphHandle](handle)

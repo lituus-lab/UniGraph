@@ -94,13 +94,13 @@ task clib, "C shared library":
        " src/UniGraph/c_api.nim"
 
 task clibStatic, "C static library":
-  exec "nim c --app:staticlib --noMain --mm:arc -d:release -o:" & staticLib &
+  exec "nim c --app:staticlib -d:staticNoAutoInit --noMain --mm:arc -d:release -o:" & staticLib &
        " src/UniGraph/c_api.nim"
 
 task clibMsvc, "C static library, MSVC ABI (Windows Python extension)":
   when defined(windows):
     # CPython on Windows is MSVC-built and cannot link MinGW output.
-    exec "nim c --cc:vcc --app:staticlib --noMain --mm:arc -d:release" &
+    exec "nim c --cc:vcc --app:staticlib -d:staticNoAutoInit --noMain --mm:arc -d:release" &
          " -o:UniGraph.lib src/UniGraph/c_api.nim"
   else:
     echo "clibMsvc: Windows-only task; no artifact on this host."
