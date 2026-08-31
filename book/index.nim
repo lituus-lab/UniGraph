@@ -1,3 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 lituus-lab
+## The preface. A Nim chapter and not the Markdown it used to be: nimibook
+## builds a `.md` entry without running any Nim, so `useLituus()` never fired
+## and this one page shipped without the theme -- and without a working
+## light/dark switch, the classes it toggles having no rules on it.
+import nimib, nimibook
+import lituus_theme
+
+nbInit(theme = useNimibook)
+useLituus()
+nb.title = "Preface"
+
+nbText: """
 # Welcome to UniGraph
 
 **UniGraph** is a generic, pedagogical graph data structure library for Nim.
@@ -106,3 +120,6 @@ UniGraph is released under the Apache License 2.0.
 ---
 
 Ready to explore graphs? Turn to [Chapter 1: What is UniGraph?](what_is_unigraph.html)
+"""
+
+nbSave

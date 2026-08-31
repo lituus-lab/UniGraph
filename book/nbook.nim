@@ -15,7 +15,7 @@ book.title = "UniGraph - Graph Algorithms in Nim"
 book.description = "A pedagogical guide to graph algorithms"
 
 book.toc = initToc:
-  entry("Preface", "index.md")
+  entry("Preface", "index.nim")
   entry("What is UniGraph?", "what_is_unigraph.nim")
   entry("Installation", "installation.nim")
   entry("Core Concepts", "core_concepts.nim")
