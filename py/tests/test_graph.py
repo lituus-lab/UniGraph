@@ -5,8 +5,8 @@ import pytest
 
 
 def test_version():
-    assert unigraph.version() == "1.0.0"
-    assert unigraph.__version__ == "1.0.0"
+    assert unigraph.version() == "1.0.1"
+    assert unigraph.__version__ == "1.0.1"
 
 
 def test_directed_basic():

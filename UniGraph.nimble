@@ -3,7 +3,7 @@
 # UniGraph — generic, pedagogical graph data structure library. Ported
 # from graphn; see git history for the port.
 
-version       = "1.0.0"
+version       = "1.0.1"
 author        = "lituus-lab"
 description   = "A generic, pedagogical graph data structure library for Nim"
 license       = "Apache-2.0"
@@ -69,6 +69,7 @@ const unitTests = [
   "tests/unit/test_algorithms.nim",
   "tests/unit/test_oracles.nim",
   "tests/unit/test_visualize.nim",
+  "tests/test_version.nim",
 ]
 
 task test, "Nim tests (debug, contracts active)":

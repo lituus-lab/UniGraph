@@ -31,7 +31,7 @@ export types, list_kernel, matrix_kernel, csr_kernel, seq_kernel, graph,
     visitor, traversals
 export shortest_path, mst, scc, tsp, graph_viz
 
-const Version* = "1.0.0"
+const Version* = "1.0.1"
 const VersionMajor* = 1
 const VersionMinor* = 0
 const VersionPatch* = 0

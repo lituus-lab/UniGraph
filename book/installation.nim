@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
+import std/strformat
 import nimib, nimibook
 import lituus_theme
+import UniGraph
 
 nbInit(theme = useNimibook)
 useLituus()
 nbText: "# Installation"
-nbText: """
+nbText: &"""
 To install **UniGraph**, you have several options depending on your needs.
 
 ## Prerequisites
@@ -36,11 +38,11 @@ Add UniGraph as a dependency in your `.nimble` file:
 
 ```nim
 # myproject.nimble
-version       = "1.0.0"
+version       = "0.1.0"
 author        = "Your Name"
 description   = "My graph project"
 requires "nim >= 2.2.0"
-requires "UniGraph >= 1.0.0"
+requires "UniGraph >= {Version}"
 ```
 
 Then install:
@@ -77,7 +79,7 @@ nim c -r test.nim
 
 Expected output:
 ```
-UniGraph version: 1.0.0
+UniGraph version: {Version}
 Successfully created graph with 1 vertex
 ```
 

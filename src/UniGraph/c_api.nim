@@ -36,7 +36,7 @@ type
     degree: clonglong
     count: clonglong
 
-const UniGraphVersionC: cstring = "1.0.0"
+const UniGraphVersionC: cstring = "1.0.1"
 
 var gInited = false
 

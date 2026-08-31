@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unigraph"
-version = "1.0.0"
+version = "1.0.1"
 description = "A generic, pedagogical graph data structure library (Python binding over the UniGraph C library)"
 readme = "README.md"
 requires-python = ">=3.10"
