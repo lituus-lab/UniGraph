@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Minimum Spanning Tree"
 nbText: """
 A **Minimum Spanning Tree (MST)** is a subset of edges that connects all vertices with minimum total weight, without any cycles.

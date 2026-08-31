@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Traveling Salesman Problem"
 nbText: """
 The **Traveling Salesman Problem (TSP)** is one of the most famous NP-hard optimization problems.

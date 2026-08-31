@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Installation"
 nbText: """
 To install **UniGraph**, you have several options depending on your needs.

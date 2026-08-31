@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Quickstart"
 nbText: """
 Let's create your first graph and run some algorithms! This guide will get you up and running in 5 minutes.

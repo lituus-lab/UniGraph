@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Graph Kernels"
 nbText: """
 **Kernels** are the low-level data storage backends in **UniGraph**. They determine:

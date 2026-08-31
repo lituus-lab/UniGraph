@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Shortest Path Algorithms"
 nbText: """
 **Shortest path** algorithms find the minimum-cost path between vertices. The "cost" can represent distance, time, money, or any metric.

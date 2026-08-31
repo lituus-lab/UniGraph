@@ -19,17 +19,45 @@ requires "https://github.com/lbartoletti/NimContracts#main"
 # 0.3.1) and 0.3.1/0.4.0 don't work together; pin the real GitHub tags,
 # where nimibook v0.4.0 targets nimib v0.4.1 directly.
 taskRequires "book", "https://github.com/pietroppeter/nimib#v0.4.1",
-    "https://github.com/pietroppeter/nimibook#v0.4.0"
+    "https://github.com/pietroppeter/nimibook#v0.4.0",
+    "https://github.com/lituus-lab/lituus-theme#v0.2.0"
 taskRequires "docs", "https://github.com/pietroppeter/nimib#v0.4.1",
-    "https://github.com/pietroppeter/nimibook#v0.4.0"
+    "https://github.com/pietroppeter/nimibook#v0.4.0",
+    "https://github.com/lituus-lab/lituus-theme#v0.2.0"
 taskRequires "docsDeps", "https://github.com/pietroppeter/nimib#v0.4.1",
-    "https://github.com/pietroppeter/nimibook#v0.4.0"
+    "https://github.com/pietroppeter/nimibook#v0.4.0",
+    "https://github.com/lituus-lab/lituus-theme#v0.2.0"
+
+# nimble 0.22 exits 0 even when an `exec` inside a task fails, so a task's exit
+# code says nothing about whether its body ran. Each task writes a marker as
+# its last statement; `tools/gate.nim` removes the marker, runs the task, and
+# fails if it is not there afterwards. `nimble canary` proves the gate still
+# bites -- if that one ever passes, every other green result is worthless.
+const gateExe =
+  when defined(windows): "build/unigate.exe" else: "build/unigate"
+
+template done(task: string) =
+  mkDir "build/.gate"
+  writeFile("build/.gate/" & task & ".ok", "")
+
+proc gate(task: string): string =
+  ## `exec gate("test")` -- builds the tool on first use.
+  if not fileExists(gateExe):
+    exec "nim c --hints:off -o:" & gateExe & " tools/gate.nim"
+  gateExe & " " & task
+
+task canary, "Must fail: proves the gate still catches a broken build":
+  # No `done` here on purpose: the exec below raises, so the marker is never
+  # written and the gate reports the failure nimble swallowed.
+  exec "nim c -r --hints:off --path:src -o:build/canary tests/canary_broken.nim"
 
 task lint, "Fail if nimpretty would reformat a source":
   exec "nim c -r --hints:off -o:build/lint_tool tools/lint.nim"
+  done "lint"
 
 task checkVGraph, "Fail on an import that climbs the layers in vgraph.cfg":
   exec "nim c -r --hints:off -o:build/vgraph_tool tools/vgraph.nim"
+  done "checkVGraph"
 
 const unitTests = [
   "tests/unit/test_types.nim",
@@ -46,35 +74,43 @@ const unitTests = [
 task test, "Nim tests (debug, contracts active)":
   for t in unitTests:
     exec "nim c -r --path:src --hints:off --outdir:build/tests " & t
+  done "test"
 
 task testRelease, "Nim tests (release, contracts compiled away)":
   for t in unitTests:
     exec "nim c -r -d:release --path:src --hints:off --outdir:build/tests " & t
+  done "testRelease"
 
 task testCi, "Nim tests (CI subset, debug)":
-  exec "nimble test"
+  exec gate("test")
+  done "testCi"
 
 task testCiRelease, "Nim tests (CI subset, release)":
-  exec "nimble testRelease"
+  exec gate("testRelease")
+  done "testCiRelease"
 
 task testAll, "debug + release + C ABI":
-  exec "nimble test"
-  exec "nimble testRelease"
-  exec "nimble ctest"
+  exec gate("test")
+  exec gate("testRelease")
+  exec gate("ctest")
+  done "testAll"
 
 task example, "Nim examples":
   exec "nim c -r --path:src --hints:off --outdir:build/examples examples/basic_example.nim"
   exec "nim c -r --path:src --hints:off --outdir:build/examples examples/traversal_example.nim"
   exec "nim c -r --path:src --hints:off --outdir:build/examples examples/kernel_comparison.nim"
+  done "example"
 
 task benchmark, "Performance oracle: CsrKernel.edges() O(V+E) fix vs the old O(V*E)":
   exec "nim c -r -d:release --path:src --hints:off --outdir:build/examples" &
        " examples/benchmark_csr_edges.nim"
+  done "benchmark"
 
 task benchmarkCross, "Build the Nim side of the cross-library benchmark suite":
   exec "nim c -d:release --threads:on --path:src --hints:off -o:benchmarks/nim/bench_unigraph" &
        " benchmarks/nim/bench_unigraph.nim"
   echo "Run: benchmarks/nim/bench_unigraph <data_dir> <output_csv> -- see benchmarks/README.md"
+  done "benchmarkCross"
 
 # Nim takes `-o:` literally and appends no platform extension.
 const
@@ -92,10 +128,12 @@ const
 task clib, "C shared library":
   exec "nim c --app:lib --noMain --mm:arc -d:release -o:" & sharedLib & macArgs &
        " src/UniGraph/c_api.nim"
+  done "clib"
 
 task clibStatic, "C static library":
   exec "nim c --app:staticlib -d:staticNoAutoInit --noMain --mm:arc -d:release -o:" & staticLib &
        " src/UniGraph/c_api.nim"
+  done "clibStatic"
 
 task clibMsvc, "C static library, MSVC ABI (Windows Python extension)":
   when defined(windows):
@@ -104,50 +142,58 @@ task clibMsvc, "C static library, MSVC ABI (Windows Python extension)":
          " -o:UniGraph.lib src/UniGraph/c_api.nim"
   else:
     echo "clibMsvc: Windows-only task; no artifact on this host."
+  done "clibMsvc"
 
 # Nim's MinGW toolchain names it mingw32-make.
 let makeExe = if findExe("mingw32-make").len > 0: "mingw32-make" else: "make"
 
 # `make -C`, not `cd dir && make`: nimble's exec runs no shell on Windows.
 task ctest, "C ABI tests":
-  exec "nimble clibStatic"
+  exec gate("clibStatic")
   exec makeExe & " -C tests/c"
+  done "ctest"
 
 task cexample, "C demo":
-  exec "nimble clibStatic"
+  exec gate("clibStatic")
   exec makeExe & " -C examples/c"
+  done "cexample"
 
 task pyDeps, "Install Python build deps (setuptools, Cython, pytest) if missing":
   exec "python3 -m pip install --break-system-packages --quiet setuptools wheel \"Cython>=3.0.0\" pytest"
+  done "pyDeps"
 
 # The extension links the vcc static lib on Windows, the shared lib elsewhere.
 task pyLib, "Build the library the Python extension links against":
   when defined(windows):
-    exec "nimble clibMsvc"
+    exec gate("clibMsvc")
   else:
-    exec "nimble clib"
+    exec gate("clib")
+  done "pyLib"
 
 task buildCython, "Cython extension in-place":
-  exec "nimble pyLib"
-  exec "nimble pyDeps"
+  exec gate("pyLib")
+  exec gate("pyDeps")
   # nimscript `cd` (lib/system/nimscript.nim) changes the VM cwd for the next
   # exec without a shell, so the task works under nimble's no-shell exec on Windows.
   cd "py"
   exec "python3 setup.py build_ext --inplace"
   cd ".."
+  done "buildCython"
 
 task pyTest, "Cython extension + pytest":
-  exec "nimble buildCython"
+  exec gate("buildCython")
   cd "py"
   exec "python3 -m pytest -q"
   cd ".."
+  done "pyTest"
 
 task pyWheel, "wheel":
-  exec "nimble pyLib"
-  exec "nimble pyDeps"
+  exec gate("pyLib")
+  exec gate("pyDeps")
   cd "py"
   exec "python3 setup.py bdist_wheel"
   cd ".."
+  done "pyWheel"
 
 task docsDeps, "Install the docs toolchain (nimib + nimibook)":
   # This task's own taskRequires (above) is what actually fetches
@@ -156,17 +202,28 @@ task docsDeps, "Install the docs toolchain (nimib + nimibook)":
   # bare `nimble install <url>` here would hit an unrelated global
   # SAT-solver failure on this nimble version outside project scope.
   echo "nimib/nimibook installed."
+  done "docsDeps"
 
 task book, "Build the nimib book (needs nimib+nimibook)":
   withDir "book":
     exec "nim c -r --hints:off nbook.nim init"
     exec "nim c -r --hints:off nbook.nim build"
+  done "book"
 
 task docs, "API reference + book into pages/ — what CI publishes":
   rmDir "pages"
-  exec "nim doc --index:on --outdir:pages/api --project --hints:off src/UniGraph.nim"
-  exec "nimble book"
+  exec gate("book")
   cpDir "book/__site", "pages"
+  # book.json is nimibook's build state -- no page fetches it -- and it carries
+  # the absolute path of the machine that built it. It does not get published.
+  rmFile "pages/book.json"
+  exec "nim doc --index:on --outdir:pages/api --project --hints:off src/UniGraph.nim"
+  # ...and the reference wears the same theme. `nim doc` has no stylesheet
+  # option, so the palette is appended to the one it just wrote. Left alone,
+  # that reference ships six tokens below their contrast bar.
+  exec "nim c -r --hints:off --outdir:build tools/theme_api.nim " &
+       "pages/api/nimdoc.out.css"
+  done "docs"
 
 task coverage, "LCOV + HTML coverage report for the Nim sources (needs lcov)":
   # gcov and lcov driven directly, no coco. Linux and macOS only.
@@ -210,3 +267,4 @@ task coverage, "LCOV + HTML coverage report for the Nim sources (needs lcov)":
        " --output-directory coverage" &
        " --legend --quiet"
   exec "lcov --summary lcov.info"
+  done "coverage"

@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Strongly Connected Components"
 nbText: """
 A **Strongly Connected Component (SCC)** is a maximal subgraph where every vertex is reachable from every other vertex.

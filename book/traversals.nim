@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
 import nimib, nimibook
+import lituus_theme
 
 nbInit(theme = useNimibook)
+useLituus()
 nbText: "# Graph Traversals"
 nbText: """
 **Traversal** algorithms visit every reachable vertex in a graph systematically. They are the foundation for more complex algorithms.
