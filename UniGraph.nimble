@@ -160,7 +160,7 @@ task cexample, "C demo":
   done "cexample"
 
 task pyDeps, "Install Python build deps (setuptools, Cython, pytest) if missing":
-  exec "python3 -m pip install --break-system-packages --quiet setuptools wheel \"Cython>=3.0.0\" pytest"
+  exec "python3 -m pip install --break-system-packages --quiet --upgrade \"setuptools>=77\" wheel \"Cython>=3.0.0\" pytest"
   done "pyDeps"
 
 # The extension links the vcc static lib on Windows, the shared lib elsewhere.
@@ -260,7 +260,7 @@ task coverage, "LCOV + HTML coverage report for the Nim sources (needs lcov)":
   # well-defined and lcov 2.x correctly rejects it as inconsistent.
   exec "lcov --capture --no-function-coverage --directory " & cache &
        " --base-directory ." &
-       " --include \"*/src/UniGraph/*\" --output-file lcov.info --quiet"
+       " --include \"*/src/UniGraph/*\" --output-file lcov.info --quiet --ignore-errors mismatch"
   # gcov can attribute a final generated expression to EOF + 1; `range` is
   # genhtml's documented filter for precisely that compiler artifact. lcov 2.x
   # requires the matching category allowance before it applies the filter.

@@ -230,7 +230,7 @@ jobs:
           CC=cc; BIN=consumer
           if [ "$RUNNER_OS" = Windows ]; then CC=gcc; BIN=consumer.exe; fi
           "$CC" -Iartifact/include -O2 -Wall -Wextra -std=c11 -o "$BIN" \
-            tests/c/test_unigraph.c artifact/libUniGraph.a
+            tests/c/test_unigraph.c artifact/libUniGraph.a -lm
           "./$BIN"
 
   consume-wheel:
@@ -314,6 +314,10 @@ jobs:
           [ "$RUNNER_OS" = Windows ] && GATE=build/unigate.exe
           nim c --hints:off -o:$GATE tools/gate.nim
           echo "GATE=$GATE" >> "$GITHUB_ENV"
+      # The nimib book links markdown, which loads libpcre at run time.
+      # ubuntu-24.04 stopped shipping it, so the book compiles and the binary
+      # dies on the first run: `could not load: libpcre.so(.3|.1|)`.
+      - run: sudo apt-get update && sudo apt-get install -y libpcre3
       - run: $GATE docsDeps
       # nimib runs the book's code against this build: a stale book fails here.
       - run: $GATE docs
