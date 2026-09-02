@@ -38,8 +38,6 @@ type
 
 const UniGraphVersionC: cstring = "1.0.1"
 
-var gInited = false
-
 proc NimMain() {.importc, cdecl.}
 
 proc edgeWeight(edge: Edge[float64]): float = edge.data
@@ -137,10 +135,15 @@ else:
 {.push exportc, cdecl, dynlib.}
 
 proc ug_init(): cint =
+  ## Bring up the Nim runtime. Call once before any other entry point.
+  ##
+  ## The work is `ensureRuntime`, which every entry point calls. It used to be
+  ## followed by a direct NimMain, so under -d:staticNoAutoInit the module
+  ## initializers ran twice, rebuilding every global while the first set was
+  ## still live -- and the flag meant to prevent it was itself a Nim global,
+  ## which that second run reset. Reproduced in UniColor: the second
+  ## `uc_palette_make` of a process died inside Nim's allocator.
   ensureRuntime()
-  if not gInited:
-    NimMain()
-    gInited = true
   1
 
 proc ug_version(): cstring =
