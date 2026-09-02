@@ -43,6 +43,10 @@ CI: 3-OS Nim + C ABI (`ctest`) + Python (`pyTest`) matrix, lint, V-graph check, 
   one concrete instantiation (`MutableGraph[ListKernel[int64, float64], ...]`)
   since the generic Nim API isn't C-ABI-shaped — see `c_api.nim`'s header
   comment. Vertex removal is intentionally not exposed there.
+- A change to `c_api.nim` is verified by `ctest`, `pyTest` and, where there
+  is one, `wasmTest`: three linkages, three runtime bootstraps. A green
+  `ctest` alone proved nothing the day the shared build lost its
+  initializer and every registry answered with the sentinel.
 - Python binding (`py/unigraph`): Cython over the C ABI, RPATH `$ORIGIN`
   (Linux) / `@loader_path` (macOS), MSVC static lib on Windows.
 - `book/` is nimib, but every chapter uses `nbText` (static, uncompiled),
