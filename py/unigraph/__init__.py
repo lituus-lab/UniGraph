@@ -10,7 +10,7 @@ from importlib.metadata import PackageNotFoundError, version as distribution_ver
 from ._core import Graph, version as _version_c
 
 try:
-    __version__ = distribution_version("unigraph")
+    __version__ = distribution_version("lituus-unigraph")
 except PackageNotFoundError:
     __version__ = _version_c().decode("ascii")
 

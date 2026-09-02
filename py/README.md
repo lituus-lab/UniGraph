@@ -15,7 +15,7 @@ components, TSP solvers, and DOT/ASCII rendering all run in the native core.
 ## Install
 
 ```bash
-pip install unigraph
+pip install lituus-unigraph
 ```
 
 Prebuilt wheels include the native UniGraph library for Linux, macOS, and

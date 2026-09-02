@@ -184,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/unigraph/
+      url: https://pypi.org/project/lituus-unigraph/
     permissions:
       # Trusted publishing (OIDC): no API token stored here. Requires a
       # one-time manual step on pypi.org -- add lituus-lab/UniGraph,
